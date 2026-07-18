@@ -3,6 +3,7 @@
 namespace Tests\Feature\Spa;
 
 use App\Http\Middleware\EnsureOwner;
+use App\Models\SpaConfig;
 use App\Models\Vlasnik;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -24,6 +25,7 @@ class OwnerAccessTest extends TestCase
     public function test_owner_can_view_home_after_access(): void
     {
         $vlasnik = Vlasnik::factory()->create(['ime' => 'Petar']);
+        SpaConfig::factory()->for($vlasnik->stan->zgrada)->create();
 
         $this->get(route('spa.access', $vlasnik->token));
 
