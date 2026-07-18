@@ -161,7 +161,7 @@ return [
     */
 
     'features' => [
-        Features::registration(),
+        // Registracija je onemogućena — nalozi osoblja se prave administrativno (seeder/artisan).
         Features::resetPasswords(),
         Features::emailVerification(),
         Features::twoFactorAuthentication([
