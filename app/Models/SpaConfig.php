@@ -21,12 +21,14 @@ use Illuminate\Support\Carbon;
  * @property string $radno_do
  * @property int $broj_slotova
  * @property int $min_sati_pre
+ * @property int $podsetnik_sati_pre
  * @property bool $blokiraj_dug
  * @property bool $aktivan
  */
 #[Fillable([
     'zgrada_id', 'kapacitet', 'max_rez_7d', 'max_osoba', 'horizont_dana',
-    'radno_od', 'radno_do', 'broj_slotova', 'min_sati_pre', 'blokiraj_dug', 'aktivan',
+    'radno_od', 'radno_do', 'broj_slotova', 'min_sati_pre', 'podsetnik_sati_pre',
+    'blokiraj_dug', 'aktivan',
 ])]
 class SpaConfig extends Model
 {

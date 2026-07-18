@@ -1,9 +1,9 @@
 <x-mail::message>
-# Rezervacija potvrđena
+# Podsetnik za spa termin
 
 Poštovani/a {{ $booking->vlasnik?->ime }},
 
-Vaša rezervacija spa termina je uspešno kreirana.
+Podsećamo vas da vaš spa termin počinje uskoro.
 
 **Termin:** {{ $termin }}
 **Broj osoba:** {{ $booking->broj_osoba }}

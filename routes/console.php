@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('spa:refresh-permanents')->dailyAt('00:05');
+Schedule::command('spa:posalji-podsetnike')->hourly();

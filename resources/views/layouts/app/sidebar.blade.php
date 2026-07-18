@@ -16,6 +16,20 @@
                         {{ __('Dashboard') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
+
+                @if (auth()->user()?->isManager())
+                    <flux:sidebar.group :heading="__('Spa — upravnik')" class="grid">
+                        <flux:sidebar.item icon="calendar" :href="route('upravnik.rezervacije')" :current="request()->routeIs('upravnik.rezervacije')" wire:navigate>
+                            {{ __('Rezervacije') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item icon="lock-closed" :href="route('upravnik.blokade')" :current="request()->routeIs('upravnik.blokade')" wire:navigate>
+                            {{ __('Blokade termina') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item icon="cog-6-tooth" :href="route('upravnik.konfiguracija')" :current="request()->routeIs('upravnik.konfiguracija')" wire:navigate>
+                            {{ __('Konfiguracija') }}
+                        </flux:sidebar.item>
+                    </flux:sidebar.group>
+                @endif
             </flux:sidebar.nav>
 
             <flux:spacer />

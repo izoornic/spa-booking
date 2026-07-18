@@ -60,4 +60,24 @@ class BookingException extends RuntimeException
     {
         return new self('Rezervacija je već otkazana ili izmenjena.');
     }
+
+    public static function nepotvrdiva(): self
+    {
+        return new self('Rezervacija se ne može evidentirati u trenutnom stanju.');
+    }
+
+    public static function neDanas(): self
+    {
+        return new self('Rezervacija se može evidentirati samo na dan termina.');
+    }
+
+    public static function nevalidnaEvidencija(int $max): self
+    {
+        return new self("Broj prisutnih mora biti između 0 i {$max}.");
+    }
+
+    public static function rezervacijaNijeNadjena(): self
+    {
+        return new self('Rezervacija sa ovim kodom nije pronađena.');
+    }
 }

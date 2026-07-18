@@ -3,15 +3,20 @@
 namespace App\Services;
 
 use App\Enums\BookingState;
+use App\Enums\StaffRole;
 use App\Exceptions\BookingException;
+use App\Mail\RezervacijaObavestenjeUpravniku;
 use App\Mail\RezervacijaOtkazana;
 use App\Mail\RezervacijaPomerena;
 use App\Mail\RezervacijaPotvrda;
+use App\Mail\SlotBlokiranObavestenje;
 use App\Models\SpaBlokada;
 use App\Models\SpaBooking;
 use App\Models\SpaConfig;
 use App\Models\Stan;
+use App\Models\User;
 use App\Models\Vlasnik;
+use App\Models\Zgrada;
 use Carbon\CarbonImmutable;
 use DateTimeInterface;
 use Illuminate\Support\Collection;
@@ -60,12 +65,28 @@ class SpaBookingService
 
             $this->refreshPermanent($stan);
 
+            $fresh = $booking->fresh();
+
             if ($vlasnik?->email) {
-                Mail::to($vlasnik->email)->queue(new RezervacijaPotvrda($booking->fresh()));
+                Mail::to($vlasnik->email)->queue(new RezervacijaPotvrda($fresh));
             }
 
-            return $booking->fresh();
+            $this->notifyManagers($fresh);
+
+            return $fresh;
         });
+    }
+
+    /**
+     * Email every manager (upravnik) that a new reservation was created.
+     */
+    private function notifyManagers(SpaBooking $booking): void
+    {
+        User::where('role', StaffRole::Manager)
+            ->whereNotNull('email')
+            ->each(function (User $manager) use ($booking): void {
+                Mail::to($manager->email)->queue(new RezervacijaObavestenjeUpravniku($booking));
+            });
     }
 
     /**
@@ -104,6 +125,69 @@ class SpaBookingService
 
             return $this->reserve($stan, $vlasnik, $datum, $slotIndex, $brojOsoba);
         });
+    }
+
+    /**
+     * Cancel any reservation as a manager, bypassing the tenant cut-off window.
+     */
+    public function cancelAsManager(SpaBooking $booking): void
+    {
+        DB::transaction(function () use ($booking) {
+            if (! in_array($booking->stanje, BookingState::active(), true)) {
+                throw BookingException::neaktivnaRezervacija();
+            }
+
+            $booking->update(['stanje' => BookingState::Cancelled, 'je_trajna' => false]);
+            $this->refreshPermanent($booking->stan);
+
+            if ($booking->vlasnik?->email) {
+                Mail::to($booking->vlasnik->email)->queue(new RezervacijaOtkazana($booking->fresh()));
+            }
+        });
+    }
+
+    /**
+     * Block a slot (or a whole day when $slotIndex is null): record the blockade and
+     * cancel every active reservation it hits, emailing the affected owners.
+     */
+    public function blokiraj(Zgrada $zgrada, DateTimeInterface $datum, ?int $slotIndex, ?string $razlog, ?User $autor): SpaBlokada
+    {
+        $datum = CarbonImmutable::instance($datum)->startOfDay();
+
+        return DB::transaction(function () use ($zgrada, $datum, $slotIndex, $razlog, $autor) {
+            $blokada = SpaBlokada::create([
+                'zgrada_id' => $zgrada->id,
+                'datum' => $datum,
+                'slot_index' => $slotIndex,
+                'razlog' => $razlog,
+                'created_by' => $autor?->id,
+            ]);
+
+            $affected = SpaBooking::aktivne()
+                ->where('zgrada_id', $zgrada->id)
+                ->whereDate('datum', $datum)
+                ->when($slotIndex !== null, fn ($q) => $q->where('slot_index', $slotIndex))
+                ->get();
+
+            foreach ($affected as $booking) {
+                $booking->update(['stanje' => BookingState::Cancelled, 'je_trajna' => false]);
+                $this->refreshPermanent($booking->stan);
+
+                if ($booking->vlasnik?->email) {
+                    Mail::to($booking->vlasnik->email)->queue(new SlotBlokiranObavestenje($booking->fresh(), $razlog));
+                }
+            }
+
+            return $blokada;
+        });
+    }
+
+    /**
+     * Remove a blockade. Previously cancelled reservations are not restored.
+     */
+    public function odblokiraj(SpaBlokada $blokada): void
+    {
+        $blokada->delete();
     }
 
     /**

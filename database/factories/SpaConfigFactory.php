@@ -28,6 +28,7 @@ class SpaConfigFactory extends Factory
             'radno_do' => '21:00',
             'broj_slotova' => 3,
             'min_sati_pre' => 2,
+            'podsetnik_sati_pre' => 3,
             'blokiraj_dug' => false,
             'aktivan' => true,
         ];

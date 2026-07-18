@@ -28,6 +28,13 @@ new #[Layout('layouts.owner')] #[Title('Spa rezervacije')] class extends Compone
 
     public ?int $changingId = null;
 
+    /** QR modal state. */
+    public bool $showQr = false;
+
+    public string $qrUrl = '';
+
+    public string $qrKod = '';
+
     #[Validate('required|date')]
     public string $reserveDatum = '';
 
@@ -219,6 +226,15 @@ new #[Layout('layouts.owner')] #[Title('Spa rezervacije')] class extends Compone
         $this->showReserve = true;
     }
 
+    public function openQr(int $bookingId): void
+    {
+        $booking = SpaBooking::where('stan_id', $this->stan()->id)->findOrFail($bookingId);
+
+        $this->qrUrl = route('domar.rezervacija', ['kod' => $booking->qr_token]);
+        $this->qrKod = (string) $booking->kratki_kod;
+        $this->showQr = true;
+    }
+
     public function reserve(SpaBookingService $service): void
     {
         $this->validate();
@@ -297,6 +313,9 @@ new #[Layout('layouts.owner')] #[Title('Spa rezervacije')] class extends Compone
                     </div>
                 </div>
                 <div class="flex items-center gap-1">
+                    <flux:button size="sm" variant="ghost" icon="qr-code" wire:click="openQr({{ $rez->id }})">
+                        {{ __('QR') }}
+                    </flux:button>
                     <flux:button size="sm" variant="ghost" wire:click="openChange({{ $rez->id }})">
                         {{ __('Izmeni') }}
                     </flux:button>
@@ -391,5 +410,21 @@ new #[Layout('layouts.owner')] #[Title('Spa rezervacije')] class extends Compone
                 </flux:button>
             </div>
         </form>
+    </flux:modal>
+
+    {{-- QR modal --}}
+    <flux:modal wire:model.self="showQr" class="md:w-80">
+        <div class="flex flex-col items-center gap-4" wire:key="qr-{{ $qrKod }}"
+            x-data="qrCode(@js($qrUrl))" x-init="$nextTick(() => render())">
+            <flux:heading size="lg">{{ __('QR za prijavu') }}</flux:heading>
+            <canvas x-ref="canvas" class="rounded-lg bg-white p-2"></canvas>
+            <div class="text-center">
+                <flux:text class="text-sm text-zinc-500">{{ __('Kratki kod') }}</flux:text>
+                <div class="font-mono text-2xl font-bold tracking-widest">{{ $qrKod }}</div>
+            </div>
+            <flux:text class="text-center text-xs text-zinc-400">
+                {{ __('Pokažite QR ili kratki kod domaru na ulazu u spa.') }}
+            </flux:text>
+        </div>
     </flux:modal>
 </div>

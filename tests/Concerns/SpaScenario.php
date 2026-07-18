@@ -51,6 +51,11 @@ trait SpaScenario
         return app(SpaBookingService::class);
     }
 
+    protected function today(): CarbonImmutable
+    {
+        return CarbonImmutable::now()->startOfDay();
+    }
+
     protected function tomorrow(): CarbonImmutable
     {
         return CarbonImmutable::now()->addDay()->startOfDay();
