@@ -62,11 +62,11 @@ PHPUnit (not Pest) against an in-memory SQLite DB.
 `DB::prohibitDestructiveCommands()` in production, and strong `Password::defaults()` in production
 only (no constraints in local/testing). Keep date handling immutable-aware.
 
-## Flux license note
+## Flux note
 
-Flux UI is a paid package. Fresh `composer install` needs Flux repo credentials configured
-(`composer config http-basic.composer.fluxui.dev <user> <license-key>`) — CI injects these from
-secrets. Without them, dependency install fails.
+This project uses the **free** Flux UI (`livewire/flux` from Packagist — no `flux-pro`, no
+`repositories` block pointing at `composer.fluxui.dev`). `composer install` needs **no credentials
+and no `auth.json`**. (Only Flux Pro would require the `composer.fluxui.dev` http-basic license.)
 
 ===
 
