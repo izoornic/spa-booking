@@ -2,7 +2,6 @@
 
 namespace App\Http\Responses;
 
-use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,22 +16,10 @@ class LoginResponse implements LoginResponseContract
      */
     public function toResponse($request): RedirectResponse|JsonResponse
     {
-        $target = $this->redirectTarget($request->user());
+        $target = $request->user()?->homeUrl() ?? url((string) config('fortify.home', '/dashboard'));
 
         return $request->wantsJson()
             ? new JsonResponse(['redirect' => $target])
             : redirect()->intended($target);
-    }
-
-    /**
-     * Attendants land on their mobile desk; everyone else on the web dashboard.
-     */
-    private function redirectTarget(?User $user): string
-    {
-        if ($user?->isAttendant()) {
-            return route('domar.home');
-        }
-
-        return config('fortify.home', '/dashboard');
     }
 }

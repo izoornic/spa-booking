@@ -29,6 +29,7 @@ class SpaConfigFactory extends Factory
             'broj_slotova' => 3,
             'min_sati_pre' => 2,
             'podsetnik_sati_pre' => 3,
+            'zakljucaj_sati_pre' => 1,
             'blokiraj_dug' => false,
             'aktivan' => true,
         ];

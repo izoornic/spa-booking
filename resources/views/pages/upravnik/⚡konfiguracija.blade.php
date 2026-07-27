@@ -30,6 +30,8 @@ new #[Layout('layouts.app')] #[Title('Konfiguracija — upravnik')] class extend
 
     public int $podsetnik_sati_pre = 3;
 
+    public int $zakljucaj_sati_pre = 1;
+
     public bool $blokiraj_dug = false;
 
     public bool $aktivan = true;
@@ -71,6 +73,7 @@ new #[Layout('layouts.app')] #[Title('Konfiguracija — upravnik')] class extend
         $this->broj_slotova = $config->broj_slotova;
         $this->min_sati_pre = $config->min_sati_pre;
         $this->podsetnik_sati_pre = $config->podsetnik_sati_pre;
+        $this->zakljucaj_sati_pre = $config->zakljucaj_sati_pre;
         $this->blokiraj_dug = $config->blokiraj_dug;
         $this->aktivan = $config->aktivan;
     }
@@ -92,6 +95,7 @@ new #[Layout('layouts.app')] #[Title('Konfiguracija — upravnik')] class extend
             'broj_slotova' => 'required|integer|min:1|max:12',
             'min_sati_pre' => 'required|integer|min:0',
             'podsetnik_sati_pre' => 'required|integer|min:0',
+            'zakljucaj_sati_pre' => 'required|integer|min:0',
             'blokiraj_dug' => 'boolean',
             'aktivan' => 'boolean',
         ]);
@@ -128,6 +132,7 @@ new #[Layout('layouts.app')] #[Title('Konfiguracija — upravnik')] class extend
                 <flux:input type="number" wire:model="broj_slotova" :label="__('Broj slotova')" />
                 <flux:input type="number" wire:model="min_sati_pre" :label="__('Min. sati pre termina')" />
                 <flux:input type="number" wire:model="podsetnik_sati_pre" :label="__('Podsetnik (sati pre, 0 = isključeno)')" />
+                <flux:input type="number" wire:model="zakljucaj_sati_pre" :label="__('Zaključavanje termina (sati pre)')" />
             </div>
 
             <div class="flex flex-col gap-3">

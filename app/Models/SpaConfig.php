@@ -22,13 +22,14 @@ use Illuminate\Support\Carbon;
  * @property int $broj_slotova
  * @property int $min_sati_pre
  * @property int $podsetnik_sati_pre
+ * @property int $zakljucaj_sati_pre
  * @property bool $blokiraj_dug
  * @property bool $aktivan
  */
 #[Fillable([
     'zgrada_id', 'kapacitet', 'max_rez_7d', 'max_osoba', 'horizont_dana',
     'radno_od', 'radno_do', 'broj_slotova', 'min_sati_pre', 'podsetnik_sati_pre',
-    'blokiraj_dug', 'aktivan',
+    'zakljucaj_sati_pre', 'blokiraj_dug', 'aktivan',
 ])]
 class SpaConfig extends Model
 {
@@ -103,6 +104,24 @@ class SpaConfig extends Model
     public function slotEndAt(\DateTimeInterface $datum, int $slotIndex): CarbonImmutable
     {
         return $this->combine($datum, $this->slotWindow($slotIndex)['end']);
+    }
+
+    /**
+     * The moment a slot locks (zakljucaj_sati_pre hours before it starts). From this point
+     * every reservation in the slot is guaranteed (trajna) and can no longer be displaced.
+     */
+    public function slotLockAt(\DateTimeInterface $datum, int $slotIndex): CarbonImmutable
+    {
+        return $this->slotStartAt($datum, $slotIndex)->subHours($this->zakljucaj_sati_pre);
+    }
+
+    /**
+     * Whether the slot is currently within its locked window (locked and not yet ended).
+     */
+    public function slotZakljucan(\DateTimeInterface $datum, int $slotIndex, CarbonImmutable $now): bool
+    {
+        return $this->slotLockAt($datum, $slotIndex)->lte($now)
+            && $this->slotEndAt($datum, $slotIndex)->gt($now);
     }
 
     /**

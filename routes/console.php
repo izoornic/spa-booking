@@ -8,5 +8,5 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-Schedule::command('spa:refresh-permanents')->dailyAt('00:05');
+Schedule::command('spa:refresh-permanents')->everyFifteenMinutes()->withoutOverlapping();
 Schedule::command('spa:posalji-podsetnike')->hourly();

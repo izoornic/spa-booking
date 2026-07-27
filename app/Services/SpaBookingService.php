@@ -206,7 +206,10 @@ class SpaBookingService
             ->first()?->id;
 
         foreach ($active as $booking) {
-            $should = $booking->id === $permanentId;
+            // A booking is permanent if it is the apartment's nearest upcoming reservation,
+            // or if its slot has entered the locked window (see slotZakljucan).
+            $should = $booking->id === $permanentId
+                || $config->slotZakljucan($booking->datum, $booking->slot_index, $now);
 
             if ($booking->je_trajna !== $should) {
                 $booking->update(['je_trajna' => $should]);
@@ -222,6 +225,12 @@ class SpaBookingService
     private function makeRoom(SpaConfig $config, Collection $slot, CarbonImmutable $datum, int $slotIndex, int $needed): void
     {
         $terminStart = $config->slotStartAt($datum, $slotIndex);
+
+        // Once the target slot is locked, nothing in it may be displaced — even a
+        // reservation whose je_trajna flag has not yet been refreshed.
+        if ($config->slotZakljucan($datum, $slotIndex, CarbonImmutable::now())) {
+            throw BookingException::slotPun();
+        }
 
         $conditionals = $slot
             ->reject(fn (SpaBooking $b): bool => $b->je_trajna)

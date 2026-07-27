@@ -68,6 +68,17 @@ class User extends Authenticatable implements PasskeyUser
     }
 
     /**
+     * The landing URL for this user based on their role: attendants get their
+     * mobile desk, everyone else the web dashboard.
+     */
+    public function homeUrl(): string
+    {
+        return $this->isAttendant()
+            ? route('domar.home')
+            : url((string) config('fortify.home', '/dashboard'));
+    }
+
+    /**
      * Get the user's initials
      */
     public function initials(): string
