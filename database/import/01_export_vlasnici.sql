@@ -19,10 +19,11 @@
 --         --skip-column-names --batch --raw \
 --         skyvortex_com_db_6 < 01_export_vlasnici.sql > vlasnici_data.sql
 --
--- (U phpMyAdmin: pokreni SELECT, pa "Export" rezultata; CLI je pouzdaniji.)
+-- (Za phpMyAdmin bez CLI-a koristi 03_export_phpmyadmin.sql — vraća celu
+--  skriptu u jednoj ćeliji za lako kopiranje.)
 -- =====================================================================
 
-SET @ZID := 0;   -- <== UPIŠI zid zgrade
+SET @ZID := 102;   -- <== UPIŠI zid zgrade
 
 SELECT sql_line FROM (
     SELECT 0 AS ord, 'SET FOREIGN_KEY_CHECKS=0;' AS sql_line
