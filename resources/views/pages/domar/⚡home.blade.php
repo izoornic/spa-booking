@@ -108,19 +108,37 @@ new #[Layout('layouts.staff')] #[Title('Domar — pregled')] class extends Compo
 
 <div class="flex flex-col gap-6">
     {{-- Unos koda / skeniranje --}}
-    <flux:card class="flex flex-col gap-3">
+    <flux:card class="flex flex-col gap-3" x-data="qrScanner" x-on:beforeunload.window="stop()">
         <flux:heading size="lg">{{ __('Evidencija dolaska') }}</flux:heading>
         <flux:text class="text-sm text-zinc-500">
             {{ __('Skenirajte QR ili unesite kratki kod sa rezervacije gosta.') }}
         </flux:text>
 
+        {{-- Skeniranje kamerom --}}
+        <div class="flex flex-col gap-2">
+            <flux:button variant="primary" icon="qr-code" x-show="!active" x-on:click="start()">
+                {{ __('Skeniraj QR kamerom') }}
+            </flux:button>
+
+            <div x-show="active" x-cloak class="flex flex-col gap-2">
+                <div id="qr-reader" x-ref="reader" class="overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-700"></div>
+                <flux:button variant="ghost" icon="x-mark" x-on:click="stop()">
+                    {{ __('Zaustavi skeniranje') }}
+                </flux:button>
+            </div>
+
+            <flux:text x-show="error" x-cloak class="text-sm text-red-600 dark:text-red-400" x-text="error"></flux:text>
+        </div>
+
+        <flux:separator :text="__('ili')" />
+
+        {{-- Ručni unos kratkog koda --}}
         <form wire:submit="pretrazi" class="flex items-end gap-2">
             <flux:input
                 wire:model="kod"
                 :label="__('Kod rezervacije')"
                 placeholder="npr. ABC123"
                 class="flex-1"
-                autofocus
             />
             <flux:button type="submit" variant="primary" icon="magnifying-glass">
                 {{ __('Nađi') }}
