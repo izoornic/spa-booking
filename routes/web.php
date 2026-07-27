@@ -36,6 +36,7 @@ Route::middleware(['auth', 'manager'])->prefix('upravnik')->name('upravnik.')->g
     Route::livewire('/rezervacije', 'pages::upravnik.rezervacije')->name('rezervacije');
     Route::livewire('/blokade', 'pages::upravnik.blokade')->name('blokade');
     Route::livewire('/konfiguracija', 'pages::upravnik.konfiguracija')->name('konfiguracija');
+    Route::livewire('/qr-vlasnici', 'pages::upravnik.qr-vlasnici')->name('qr-vlasnici');
 });
 
 require __DIR__.'/settings.php';

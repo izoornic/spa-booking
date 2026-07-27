@@ -25,6 +25,9 @@
                         <flux:sidebar.item icon="lock-closed" :href="route('upravnik.blokade')" :current="request()->routeIs('upravnik.blokade')" wire:navigate>
                             {{ __('Blokade termina') }}
                         </flux:sidebar.item>
+                        <flux:sidebar.item icon="qr-code" :href="route('upravnik.qr-vlasnici')" :current="request()->routeIs('upravnik.qr-vlasnici')" wire:navigate>
+                            {{ __('QR kodovi za vlasnike') }}
+                        </flux:sidebar.item>
                         <flux:sidebar.item icon="cog-6-tooth" :href="route('upravnik.konfiguracija')" :current="request()->routeIs('upravnik.konfiguracija')" wire:navigate>
                             {{ __('Konfiguracija') }}
                         </flux:sidebar.item>

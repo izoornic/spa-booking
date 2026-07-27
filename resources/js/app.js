@@ -6,8 +6,9 @@ import { Html5Qrcode } from 'html5-qrcode';
  * Used on the owner reservation list so the attendant can scan a reservation at the desk.
  */
 document.addEventListener('alpine:init', () => {
-    window.Alpine.data('qrCode', (url) => ({
+    window.Alpine.data('qrCode', (url, size = 220) => ({
         url,
+        size,
         render() {
             const canvas = this.$refs.canvas;
 
@@ -15,7 +16,7 @@ document.addEventListener('alpine:init', () => {
                 return;
             }
 
-            QRCode.toCanvas(canvas, this.url, { width: 220, margin: 1 }, (error) => {
+            QRCode.toCanvas(canvas, this.url, { width: this.size, margin: 1 }, (error) => {
                 if (error) {
                     console.error('QR render failed', error);
                 }
