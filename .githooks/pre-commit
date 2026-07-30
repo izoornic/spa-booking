@@ -6,7 +6,9 @@
 #
 # Preskoči jednokratno sa:  git commit --no-verify
 
-staged=$(git diff --cached --name-only --diff-filter=ACMR)
+# -z je obavezno: bez njega git navodnicima escapuje ne-ASCII putanje, pa se
+# ⚡ page komponente pojave kao "resources/..." i ne uhvati ih grep ispod.
+staged=$(git diff --cached --name-only --diff-filter=ACMR -z | tr '\0' '\n')
 
 # Da li commit dira nešto što utiče na build (JS/CSS/Blade/config)?
 if printf '%s\n' "$staged" | grep -Eq '^(resources/|package(-lock)?\.json$|vite\.config\.)'; then
