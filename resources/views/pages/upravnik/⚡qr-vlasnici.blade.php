@@ -2,6 +2,7 @@
 
 use App\Models\Vlasnik;
 use App\Models\Zgrada;
+use Flux\Flux;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -52,6 +53,26 @@ new #[Layout('layouts.app')] #[Title('QR kodovi za vlasnike — upravnik')] clas
             ->get()
             ->sortBy(fn (Vlasnik $v): string => $v->stan->broj, SORT_NATURAL | SORT_FLAG_CASE)
             ->values();
+    }
+
+    /**
+     * Issue a new access token for one owner. The previous QR link stops working
+     * immediately and any session opened with it is ended.
+     */
+    public function regenerisi(int $vlasnikId): void
+    {
+        $vlasnik = Vlasnik::query()
+            ->whereHas('stan', fn ($q) => $q->where('zgrada_id', $this->zgradaId))
+            ->findOrFail($vlasnikId);
+
+        $vlasnik->regenerateToken();
+
+        unset($this->vlasnici);
+
+        Flux::toast(
+            variant: 'success',
+            text: __('Novi QR kod je izdat za stan :stan. Stari link više ne važi.', ['stan' => $vlasnik->stan->broj]),
+        );
     }
 }; ?>
 
@@ -105,7 +126,8 @@ new #[Layout('layouts.app')] #[Title('QR kodovi za vlasnike — upravnik')] clas
 
             <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 print:grid-cols-3">
                 @foreach ($this->vlasnici as $v)
-                    <div wire:key="qr-{{ $v->id }}"
+                    {{-- Token je deo ključa: nakon izdavanja novog QR-a canvas se ponovo iscrtava. --}}
+                    <div wire:key="qr-{{ $v->id }}-{{ $v->token }}"
                         class="flex flex-col items-center gap-2 rounded-lg border border-zinc-200 p-4 text-center dark:border-zinc-700 print:break-inside-avoid">
                         <div class="text-sm font-semibold">{{ __('Stan') }} {{ $v->stan->broj }}</div>
                         <canvas
@@ -114,6 +136,12 @@ new #[Layout('layouts.app')] #[Title('QR kodovi za vlasnike — upravnik')] clas
                             x-ref="canvas"
                             class="rounded bg-white p-1"></canvas>
                         <div class="text-sm text-zinc-600 dark:text-zinc-300">{{ $v->punoIme() }}</div>
+
+                        <flux:button size="xs" variant="ghost" icon="arrow-path" class="print:hidden"
+                            wire:click="regenerisi({{ $v->id }})"
+                            wire:confirm="{{ __('Izdati novi QR kod za stan :stan? Stari link odmah prestaje da važi i vlasnik će biti odjavljen.', ['stan' => $v->stan->broj]) }}">
+                            {{ __('Novi QR') }}
+                        </flux:button>
                     </div>
                 @endforeach
             </div>

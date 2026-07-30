@@ -50,4 +50,29 @@ class OwnerAccessTest extends TestCase
     {
         $this->get(route('spa.home'))->assertForbidden();
     }
+
+    public function test_old_token_stops_working_after_regeneration(): void
+    {
+        $vlasnik = Vlasnik::factory()->create();
+        $stari = $vlasnik->token;
+
+        $vlasnik->regenerateToken();
+
+        $this->get(route('spa.access', $stari))->assertNotFound();
+        $this->get(route('spa.access', $vlasnik->token))->assertRedirect(route('spa.home'));
+    }
+
+    public function test_regenerating_the_token_ends_an_open_owner_session(): void
+    {
+        $vlasnik = Vlasnik::factory()->create();
+        SpaConfig::factory()->for($vlasnik->stan->zgrada)->create();
+
+        $this->get(route('spa.access', $vlasnik->token));
+        $this->get(route('spa.home'))->assertOk();
+
+        $vlasnik->regenerateToken();
+
+        $this->get(route('spa.home'))->assertForbidden();
+        $this->assertNull(session(EnsureOwner::SESSION_KEY));
+    }
 }

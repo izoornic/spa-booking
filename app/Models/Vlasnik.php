@@ -61,6 +61,17 @@ class Vlasnik extends Model
     }
 
     /**
+     * Issue a fresh access token, invalidating the owner's previous QR link
+     * and any owner session started with it (see EnsureOwner).
+     */
+    public function regenerateToken(): string
+    {
+        $this->forceFill(['token' => static::generateToken()])->save();
+
+        return $this->token;
+    }
+
+    /**
      * Full name of the owner.
      */
     public function punoIme(): string

@@ -5,6 +5,7 @@ namespace Tests\Feature\Spa;
 use App\Models\Stan;
 use App\Models\User;
 use App\Models\Vlasnik;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\Concerns\SpaScenario;
@@ -48,6 +49,46 @@ class ManagerQrVlasniciTest extends TestCase
             ->test('pages::upravnik.qr-vlasnici')
             ->assertOk()
             ->assertDontSee($inactive->token);
+    }
+
+    public function test_manager_can_issue_a_new_qr_token_for_an_owner(): void
+    {
+        $this->bootScenario();
+        $vlasnik = $this->vlasnikOf($this->stan(['broj' => '5']));
+        $stari = $vlasnik->token;
+
+        Livewire::actingAs($this->manager())
+            ->test('pages::upravnik.qr-vlasnici')
+            ->call('regenerisi', $vlasnik->id)
+            ->assertOk()
+            ->assertDontSee($stari)
+            ->assertSee($vlasnik->fresh()->token);
+
+        $this->assertNotSame($stari, $vlasnik->fresh()->token);
+    }
+
+    public function test_manager_cannot_regenerate_a_token_for_another_building(): void
+    {
+        $this->bootScenario();
+        $this->stan(['broj' => '1']);
+
+        $otherStan = Stan::factory()
+            ->has(Vlasnik::factory(), 'vlasnici')
+            ->create();
+        $other = $otherStan->vlasnici()->firstOrFail();
+        $stari = $other->token;
+
+        try {
+            Livewire::actingAs($this->manager())
+                ->test('pages::upravnik.qr-vlasnici')
+                ->call('regenerisi', $other->id);
+
+            $this->fail('Očekivan ModelNotFoundException za vlasnika iz druge zgrade.');
+        } catch (ModelNotFoundException) {
+            // Vlasnik iz druge zgrade nije u opsegu ove stranice.
+        }
+
+        $this->assertSame($stari, $other->fresh()->token);
     }
 
     public function test_owners_of_other_buildings_are_not_listed(): void
