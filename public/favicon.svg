@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_2" xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 166 166">
+  <!-- Generator: Adobe Illustrator 29.8.3, SVG Export Plug-In . SVG Version: 2.1.1 Build 3)  -->
+  <defs>
+    <style>
+      .st0 {
+        fill: #80a5b7;
+      }
+
+      .st1 {
+        fill: #4b5566;
+      }
+
+      .st2 {
+        fill: #5c677c;
+      }
+
+      .st3 {
+        fill: url(#linear-gradient);
+      }
+    </style>
+    <linearGradient id="linear-gradient" x1="58.6" y1="18.35" x2="103.1" y2="48.81" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#80a5b7"/>
+      <stop offset="1" stop-color="#5c677c"/>
+    </linearGradient>
+  </defs>
+  <g>
+    <polygon class="st2" points="81.83 93.58 136.87 53.19 136.87 44.99 81.83 85.38 81.83 93.58"/>
+    <polygon class="st0" points="81.83 93.58 29.13 68.44 29.13 60.24 81.83 85.38 81.83 93.58"/>
+  </g>
+  <g>
+    <polygon class="st2" points="81.83 116.61 136.87 76.22 136.87 68.03 81.83 108.42 81.83 116.61"/>
+    <polygon class="st0" points="81.83 116.61 29.13 91.47 29.13 83.28 81.83 108.42 81.83 116.61"/>
+  </g>
+  <g>
+    <polygon class="st2" points="81.83 139.65 136.87 99.26 136.87 91.06 81.83 131.45 81.83 139.65"/>
+    <polygon class="st0" points="81.83 139.65 29.13 114.51 29.13 106.31 81.83 131.45 81.83 139.65"/>
+  </g>
+  <g>
+    <polygon class="st2" points="81.83 165.02 136.87 124.63 136.87 116.43 81.83 156.82 81.83 165.02"/>
+    <polygon class="st0" points="81.83 165.02 29.13 139.88 29.13 131.68 81.83 156.82 81.83 165.02"/>
+  </g>
+  <polygon class="st1" points="120.48 116.39 102.91 129.2 102.91 149.56 120.48 136.6 120.48 116.39"/>
+  <polygon class="st3" points="81.83 67.82 29.13 42.67 84.48 1.84 136.87 27.43 81.83 67.82"/>
+  <polygon class="st0" points="81.83 70.07 29.13 44.99 29.13 42.64 81.83 67.72 81.83 70.07"/>
+  <polygon class="st1" points="81.83 70.07 136.87 29.8 136.87 27.45 81.83 67.72 81.83 70.07"/>
+</svg>
