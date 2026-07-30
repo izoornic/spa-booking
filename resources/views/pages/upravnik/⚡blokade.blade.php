@@ -1,5 +1,6 @@
 <?php
 
+use App\Exceptions\BookingException;
 use App\Models\SpaBlokada;
 use App\Models\SpaConfig;
 use App\Models\Zgrada;
@@ -89,13 +90,19 @@ new #[Layout('layouts.app')] #[Title('Blokade termina — upravnik')] class exte
 
         $zgrada = Zgrada::findOrFail($this->zgradaId);
 
-        $service->blokiraj(
-            $zgrada,
-            CarbonImmutable::parse($this->datum),
-            $this->slot === 0 ? null : $this->slot,
-            $this->razlog !== '' ? $this->razlog : null,
-            auth()->user(),
-        );
+        try {
+            $service->blokiraj(
+                $zgrada,
+                CarbonImmutable::parse($this->datum),
+                $this->slot === 0 ? null : $this->slot,
+                $this->razlog !== '' ? $this->razlog : null,
+                auth()->user(),
+            );
+        } catch (BookingException $e) {
+            Flux::toast(variant: 'danger', text: $e->getMessage());
+
+            return;
+        }
 
         $this->reset('razlog');
         unset($this->blokade);

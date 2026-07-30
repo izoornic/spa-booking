@@ -41,6 +41,11 @@ class BookingException extends RuntimeException
         return new self('Izabrani termin je blokiran.');
     }
 
+    public static function vecBlokiran(): self
+    {
+        return new self('Ovaj termin je već blokiran.');
+    }
+
     public static function kvotaPopunjena(int $max): self
     {
         return new self("Dostigli ste maksimum od {$max} rezervacija u periodu.");

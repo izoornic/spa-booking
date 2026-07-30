@@ -155,6 +155,18 @@ class SpaBookingService
         $datum = CarbonImmutable::instance($datum)->startOfDay();
 
         return DB::transaction(function () use ($zgrada, $datum, $slotIndex, $razlog, $autor) {
+            if ($this->isBlocked($zgrada->id, $datum, $slotIndex)) {
+                throw BookingException::vecBlokiran();
+            }
+
+            if ($slotIndex === null) {
+                // A whole-day blockade supersedes the per-slot ones already recorded that day.
+                SpaBlokada::where('zgrada_id', $zgrada->id)
+                    ->whereDate('datum', $datum)
+                    ->whereNotNull('slot_index')
+                    ->delete();
+            }
+
             $blokada = SpaBlokada::create([
                 'zgrada_id' => $zgrada->id,
                 'datum' => $datum,
@@ -456,11 +468,21 @@ class SpaBookingService
         return $query->get();
     }
 
-    private function isBlocked(int $zgradaId, CarbonImmutable $datum, int $slotIndex): bool
+    /**
+     * Whether a blockade already covers this slot — either the slot itself or the
+     * whole day. A null $slotIndex asks only about a whole-day blockade.
+     */
+    private function isBlocked(int $zgradaId, CarbonImmutable $datum, ?int $slotIndex): bool
     {
         return SpaBlokada::where('zgrada_id', $zgradaId)
             ->whereDate('datum', $datum)
-            ->where(fn ($q) => $q->whereNull('slot_index')->orWhere('slot_index', $slotIndex))
+            ->where(function ($q) use ($slotIndex) {
+                $q->whereNull('slot_index');
+
+                if ($slotIndex !== null) {
+                    $q->orWhere('slot_index', $slotIndex);
+                }
+            })
             ->exists();
     }
 

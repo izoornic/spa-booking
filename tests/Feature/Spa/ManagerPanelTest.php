@@ -5,6 +5,7 @@ namespace Tests\Feature\Spa;
 use App\Enums\BookingState;
 use App\Exceptions\BookingException;
 use App\Mail\SlotBlokiranObavestenje;
+use App\Models\SpaBlokada;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -113,6 +114,67 @@ class ManagerPanelTest extends TestCase
         $stan = $this->stan();
         $booking = $this->service()->reserve($stan, $this->vlasnikOf($stan), $this->tomorrow(), 1, 2);
         $this->assertSame(BookingState::Booked, $booking->stanje);
+    }
+
+    public function test_the_same_slot_cannot_be_blocked_twice(): void
+    {
+        Mail::fake();
+        $this->bootScenario();
+        $this->service()->blokiraj($this->zgrada, $this->tomorrow(), 1, 'Održavanje', $this->manager());
+
+        Livewire::actingAs($this->manager())
+            ->test('pages::upravnik.blokade')
+            ->set('datum', $this->tomorrow()->format('Y-m-d'))
+            ->set('slot', 1)
+            ->call('kreiraj')
+            ->assertHasNoErrors();
+
+        $this->assertSame(1, SpaBlokada::whereDate('datum', $this->tomorrow())->count());
+    }
+
+    public function test_a_slot_covered_by_a_whole_day_blockade_cannot_be_blocked_again(): void
+    {
+        Mail::fake();
+        $this->bootScenario();
+        $this->service()->blokiraj($this->zgrada, $this->tomorrow(), null, 'Čišćenje', $this->manager());
+
+        $this->expectException(BookingException::class);
+        $this->service()->blokiraj($this->zgrada, $this->tomorrow(), 2, null, $this->manager());
+    }
+
+    public function test_the_whole_day_cannot_be_blocked_twice(): void
+    {
+        Mail::fake();
+        $this->bootScenario();
+        $this->service()->blokiraj($this->zgrada, $this->tomorrow(), null, null, $this->manager());
+
+        $this->expectException(BookingException::class);
+        $this->service()->blokiraj($this->zgrada, $this->tomorrow(), null, null, $this->manager());
+    }
+
+    public function test_a_whole_day_blockade_supersedes_existing_slot_blockades(): void
+    {
+        Mail::fake();
+        $this->bootScenario();
+        $this->service()->blokiraj($this->zgrada, $this->tomorrow(), 1, null, $this->manager());
+        $this->service()->blokiraj($this->zgrada, $this->tomorrow(), 3, null, $this->manager());
+
+        $this->service()->blokiraj($this->zgrada, $this->tomorrow(), null, 'Čišćenje', $this->manager());
+
+        $preostale = SpaBlokada::whereDate('datum', $this->tomorrow())->get();
+        $this->assertCount(1, $preostale);
+        $this->assertNull($preostale->first()->slot_index);
+    }
+
+    public function test_blocking_a_different_slot_on_the_same_day_still_works(): void
+    {
+        Mail::fake();
+        $this->bootScenario();
+        $this->service()->blokiraj($this->zgrada, $this->tomorrow(), 1, null, $this->manager());
+
+        $this->service()->blokiraj($this->zgrada, $this->tomorrow(), 2, null, $this->manager());
+
+        $this->assertSame(2, SpaBlokada::whereDate('datum', $this->tomorrow())->count());
     }
 
     public function test_manager_can_update_config(): void
