@@ -37,6 +37,64 @@ class ManagerPanelTest extends TestCase
         $this->assertSame(BookingState::Cancelled, $booking->fresh()->stanje);
     }
 
+    public function test_manager_calendar_shows_days_slots_and_booked_apartments(): void
+    {
+        Mail::fake();
+        $this->bootScenario();
+        $stan = $this->stan(['broj' => '42']);
+        $this->service()->reserve($stan, $this->vlasnikOf($stan), $this->tomorrow(), 2, 3);
+
+        $component = Livewire::actingAs($this->manager())
+            ->test('pages::upravnik.rezervacije')
+            ->assertSet('prikaz', 'kalendar')
+            ->assertSee('12:00–15:00')   // slot 1
+            ->assertSee('15:00–18:00')   // slot 2, the booked one
+            ->assertSee('Stan 42');
+
+        $kalendar = $component->instance()->kalendar();
+
+        // The horizon covers today + horizont_dana days, each with every slot.
+        $this->assertCount($this->config->horizont_dana + 1, $kalendar[0]['dani']);
+        $this->assertCount($this->config->broj_slotova, $kalendar[0]['dani'][0]['slotovi']);
+
+        // Tomorrow's second slot carries the 3 booked persons; a first reservation is "trajna".
+        $slot = $kalendar[0]['dani'][1]['slotovi'][1];
+        $this->assertSame(3, $slot['zauzeto']);
+        $this->assertSame(3, $slot['trajne']);
+        $this->assertSame(0, $slot['uslovne']);
+        $this->assertSame($this->config->kapacitet, $slot['kapacitet']);
+    }
+
+    public function test_manager_calendar_marks_blocked_slots(): void
+    {
+        Mail::fake();
+        $this->bootScenario();
+        $this->service()->blokiraj($this->zgrada, $this->tomorrow(), 1, 'Održavanje', $this->manager());
+
+        $kalendar = Livewire::actingAs($this->manager())
+            ->test('pages::upravnik.rezervacije')
+            ->assertSee('Blokiran')
+            ->instance()
+            ->kalendar();
+
+        $this->assertTrue($kalendar[0]['dani'][1]['slotovi'][0]['blokirano']);
+        $this->assertFalse($kalendar[0]['dani'][1]['slotovi'][1]['blokirano']);
+    }
+
+    public function test_manager_can_switch_to_the_table_view(): void
+    {
+        Mail::fake();
+        $this->bootScenario();
+        $stan = $this->stan(['broj' => '7']);
+        $this->service()->reserve($stan, $this->vlasnikOf($stan), $this->tomorrow(), 1, 2);
+
+        Livewire::actingAs($this->manager())
+            ->test('pages::upravnik.rezervacije')
+            ->set('prikaz', 'tabela')
+            ->assertSee('Vlasnik')
+            ->assertSee('7');
+    }
+
     public function test_manager_cancel_bypasses_the_tenant_cutoff(): void
     {
         Mail::fake();

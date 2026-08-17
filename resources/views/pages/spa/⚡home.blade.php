@@ -337,25 +337,7 @@ new #[Layout('layouts.owner')] #[Title('Spa rezervacije')] class extends Compone
             {{ __('Termini') }}
         </flux:heading>
 
-        @php
-            // Single source of truth so the legend and the occupancy grid always match.
-            // Colors mirror the Flux badge tones (green = Trajna, amber = Uslovna).
-            $swatchTrajna = 'bg-green-400/40 dark:bg-green-400/40 border border-green-500/20';
-            $swatchUslovna = 'bg-amber-400/25 dark:bg-amber-400/40 border border-amber-500/25';
-            $swatchSlobodno = 'border border-zinc-300 dark:border-zinc-600';
-        @endphp
-
-        <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-zinc-500">
-            <span class="flex items-center gap-1.5">
-                <span class="size-3 rounded-[3px] {{ $swatchTrajna }}"></span>{{ __('Trajna') }}
-            </span>
-            <span class="flex items-center gap-1.5">
-                <span class="size-3 rounded-[3px] {{ $swatchUslovna }}"></span>{{ __('Uslovna') }}
-            </span>
-            <span class="flex items-center gap-1.5">
-                <span class="size-3 rounded-[3px] {{ $swatchSlobodno }}"></span>{{ __('Slobodno') }}
-            </span>
-        </div>
+        <x-spa.legenda />
 
         @foreach ($this->dani as $dan)
             <flux:card class="!p-3 flex flex-col gap-2 shadow-md">
@@ -389,18 +371,10 @@ new #[Layout('layouts.owner')] #[Title('Spa rezervacije')] class extends Compone
                                     </flux:button>
                                 @endif
                             </div>
-                            <div class="mt-2 flex flex-wrap gap-[2px]" role="img"
-                                aria-label="{{ $slot['trajne'] }} {{ __('trajnih') }}, {{ $slot['uslovne'] }} {{ __('uslovnih') }}, {{ $slot['spare'] }} {{ __('slobodnih mesta') }}">
-                                @for ($i = 1; $i <= $slot['kapacitet']; $i++)
-                                    @if ($i <= $slot['trajne'])
-                                        <span class="size-3 rounded-[3px] {{ $swatchTrajna }}"></span>
-                                    @elseif ($i <= $slot['trajne'] + $slot['uslovne'])
-                                        <span class="size-3 rounded-[3px] {{ $swatchUslovna }}"></span>
-                                    @else
-                                        <span class="size-3 rounded-[3px] {{ $swatchSlobodno }}"></span>
-                                    @endif
-                                @endfor
-                            </div>
+                            <x-spa.kapacitet class="mt-2"
+                                :trajne="$slot['trajne']"
+                                :uslovne="$slot['uslovne']"
+                                :kapacitet="$slot['kapacitet']" />
                         </div>
                     @endforeach
                 </div>

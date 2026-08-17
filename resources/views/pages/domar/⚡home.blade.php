@@ -60,10 +60,15 @@ new #[Layout('layouts.staff')] #[Title('Domar — pregled')] class extends Compo
                         ->sortByDesc(fn (SpaBooking $b): bool => $b->je_trajna)
                         ->values();
 
+                    $zauzeto = (int) $inSlot->sum('broj_osoba');
+                    $trajne = (int) $inSlot->where('je_trajna', true)->sum('broj_osoba');
+
                     $slotovi[] = [
                         'index' => $s,
                         'label' => $window['start'].'–'.$window['end'],
-                        'zauzeto' => (int) $inSlot->sum('broj_osoba'),
+                        'zauzeto' => $zauzeto,
+                        'trajne' => $trajne,
+                        'uslovne' => $zauzeto - $trajne,
                         'kapacitet' => $config->kapacitet,
                         'rezervacije' => $inSlot,
                     ];
@@ -150,6 +155,7 @@ new #[Layout('layouts.staff')] #[Title('Domar — pregled')] class extends Compo
     @foreach ($this->pregled as $zgrada)
         <div class="flex flex-col gap-3">
             <flux:heading size="lg">{{ $zgrada['naziv'] }}</flux:heading>
+            <x-spa.legenda />
 
             @foreach ($zgrada['dani'] as $dan)
                 <flux:card class="flex flex-col gap-3">
@@ -158,11 +164,16 @@ new #[Layout('layouts.staff')] #[Title('Domar — pregled')] class extends Compo
                     @foreach ($dan['slotovi'] as $slot)
                         <div class="flex flex-col gap-2 rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
                             <div class="flex items-center justify-between">
-                                <flux:text class="font-medium">{{ $slot['label'] }}</flux:text>
+                                <flux:text class="font-medium">{{ $slot['index'] }}. {{ __('termin') }} {{ $slot['label'] }}</flux:text>
                                 <flux:badge size="sm" :color="$slot['zauzeto'] >= $slot['kapacitet'] ? 'red' : 'zinc'">
                                     {{ $slot['zauzeto'] }}/{{ $slot['kapacitet'] }} {{ __('osoba') }}
                                 </flux:badge>
                             </div>
+
+                            <x-spa.kapacitet
+                                :trajne="$slot['trajne']"
+                                :uslovne="$slot['uslovne']"
+                                :kapacitet="$slot['kapacitet']" />
 
                             @forelse ($slot['rezervacije'] as $rez)
                                 <a href="{{ route('domar.rezervacija', ['kod' => $rez->kratki_kod ?? $rez->qr_token ?? $rez->id]) }}" wire:navigate

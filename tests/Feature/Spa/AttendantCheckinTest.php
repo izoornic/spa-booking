@@ -150,4 +150,27 @@ class AttendantCheckinTest extends TestCase
             ->assertSee('77')
             ->assertSee('Evidencija dolaska');
     }
+
+    public function test_desk_overview_splits_occupancy_for_the_capacity_graph(): void
+    {
+        Mail::fake();
+        $this->bootScenario();
+        $stan = $this->stan();
+        $this->service()->reserve($stan, $this->vlasnikOf($stan), $this->tomorrow(), 1, 2);
+
+        $component = Livewire::test('pages::domar.home')
+            ->assertSee('Trajna')
+            ->assertSee('Slobodno')
+            ->assertSee('1. termin 12:00–15:00');
+
+        // Today + tomorrow, every slot, with the capacity split the graph renders.
+        $pregled = $component->instance()->pregled();
+        $slot = $pregled[0]['dani'][1]['slotovi'][0];
+
+        $this->assertCount(2, $pregled[0]['dani']);
+        $this->assertSame(2, $slot['zauzeto']);
+        $this->assertSame(2, $slot['trajne']);
+        $this->assertSame(0, $slot['uslovne']);
+        $this->assertSame($this->config->kapacitet, $slot['kapacitet']);
+    }
 }
