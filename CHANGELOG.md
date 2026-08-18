@@ -10,6 +10,15 @@ format `'v 1.1.0'`) — odatle se prikazuje u podnožju aplikacije.
 - `MINOR` — nova funkcionalnost bez rušenja postojećeg
 - `PATCH` — ispravke grešaka i sitne dorade
 
+## [1.1.1] — 2026-08-18
+
+### Izmenjeno
+
+- **Obaveštenje o novoj rezervaciji šalje se domaru umesto upravniku.** Mejl „Nova spa rezervacija“
+  sada dobijaju svi korisnici sa ulogom *domar* (koji imaju email adresu); upravnik ga više ne
+  dobija. Interno: `RezervacijaObavestenjeUpravniku` → `RezervacijaObavestenjeDomaru`, šablon
+  `mail.rezervacija-upravnik` → `mail.rezervacija-domar`.
+
 ## [1.1.0] — 2026-08-17
 
 ### Dodato

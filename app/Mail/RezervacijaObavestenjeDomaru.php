@@ -10,7 +10,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class RezervacijaObavestenjeUpravniku extends Mailable implements ShouldQueue
+class RezervacijaObavestenjeDomaru extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
@@ -31,6 +31,6 @@ class RezervacijaObavestenjeUpravniku extends Mailable implements ShouldQueue
 
     public function content(): Content
     {
-        return new Content(markdown: 'mail.rezervacija-upravnik');
+        return new Content(markdown: 'mail.rezervacija-domar');
     }
 }

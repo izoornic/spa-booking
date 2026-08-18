@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Enums\BookingState;
 use App\Enums\StaffRole;
 use App\Exceptions\BookingException;
-use App\Mail\RezervacijaObavestenjeUpravniku;
+use App\Mail\RezervacijaObavestenjeDomaru;
 use App\Mail\RezervacijaOtkazana;
 use App\Mail\RezervacijaPomerena;
 use App\Mail\RezervacijaPotvrda;
@@ -71,21 +71,21 @@ class SpaBookingService
                 Mail::to($vlasnik->email)->queue(new RezervacijaPotvrda($fresh));
             }
 
-            $this->notifyManagers($fresh);
+            $this->notifyAttendants($fresh);
 
             return $fresh;
         });
     }
 
     /**
-     * Email every manager (upravnik) that a new reservation was created.
+     * Email every attendant (domar) that a new reservation was created.
      */
-    private function notifyManagers(SpaBooking $booking): void
+    private function notifyAttendants(SpaBooking $booking): void
     {
-        User::where('role', StaffRole::Manager)
+        User::where('role', StaffRole::Attendant)
             ->whereNotNull('email')
-            ->each(function (User $manager) use ($booking): void {
-                Mail::to($manager->email)->queue(new RezervacijaObavestenjeUpravniku($booking));
+            ->each(function (User $attendant) use ($booking): void {
+                Mail::to($attendant->email)->queue(new RezervacijaObavestenjeDomaru($booking));
             });
     }
 
