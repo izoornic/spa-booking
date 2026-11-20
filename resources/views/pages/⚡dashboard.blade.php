@@ -58,8 +58,7 @@ new #[Layout('layouts.app')] #[Title('Početna')] class extends Component {
 
             $slotovi = [];
 
-            for ($s = 1; $s <= $config->broj_slotova; $s++) {
-                $window = $config->slotWindow($s);
+            foreach ($config->slotsFor($today) as $s => $window) {
                 $uSlotu = $this->danasnje
                     ->where('zgrada_id', $config->zgrada_id)
                     ->where('slot_index', $s);
@@ -110,7 +109,7 @@ new #[Layout('layouts.app')] #[Title('Početna')] class extends Component {
             <flux:card class="flex flex-col gap-3">
                 <flux:heading size="lg">{{ __('Danas') }} — {{ $zgrada['naziv'] }}</flux:heading>
 
-                @foreach ($zgrada['slotovi'] as $slot)
+                @forelse ($zgrada['slotovi'] as $slot)
                     <div class="flex items-center justify-between gap-3 rounded-lg border border-zinc-200 px-3 py-2 dark:border-zinc-700">
                         <flux:text class="font-medium">{{ $slot['label'] }}</flux:text>
 
@@ -122,7 +121,9 @@ new #[Layout('layouts.app')] #[Title('Početna')] class extends Component {
                             </flux:badge>
                         @endif
                     </div>
-                @endforeach
+                @empty
+                    <flux:text class="text-sm text-zinc-500">{{ __('Zatvoreno — nema termina.') }}</flux:text>
+                @endforelse
             </flux:card>
         @endforeach
 

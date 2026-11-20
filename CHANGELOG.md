@@ -10,6 +10,32 @@ format `'v 1.1.0'`) — odatle se prikazuje u podnožju aplikacije.
 - `MINOR` — nova funkcionalnost bez rušenja postojećeg
 - `PATCH` — ispravke grešaka i sitne dorade
 
+## [2.0.0] — 2026-11-20
+
+### Izmenjeno
+
+- **Raspored termina po danima u nedelji.** Umesto jednog radnog vremena i broja jednakih
+  slotova za sve dane, upravnik u *Konfiguraciji* za svaki dan (ponedeljak–nedelja) zadaje
+  sopstvenu listu termina (početak–kraj), sa dugmićima *Dodaj termin*, brisanjem termina i
+  *Kopiraj na sve dane*. Dan bez termina je **zatvoren**. Termini se čuvaju sortirani po početku;
+  preklapanje i kraj pre početka se odbijaju.
+- Vlasnik, domar i upravnik vide termine konkretnog dana; zatvoren dan prikazuje
+  „Zatvoreno — nema termina“. U uputstvu za vlasnike prikazuje se nedeljni raspored (uzastopni
+  dani sa istim terminima su spojeni, npr. „Ponedeljak – Petak“).
+- Blokade: ponuđeni termini zavise od izabranog datuma; blokada nepostojećeg termina se odbija.
+- Korisničko uputstvo za vlasnike (`Uputstvo-Vlasnik.docx`) usklađeno sa rasporedom po danima:
+  opis termina, nova oznaka „Zatvoreno — nema termina“, tabela pravila i novo često pitanje.
+- **Izmena rasporeda čuva postojeće rezervacije i blokade:** ako isti termin (isto vreme) postoji
+  i u novom rasporedu, rezervacija/blokada se automatski prevezuje na njegovu novu poziciju. Ako bi
+  izmena uklonila termin koji ima predstojeću aktivnu rezervaciju ili blokadu, čuvanje se odbija
+  uz spisak spornih termina.
+
+### Baza
+
+- `spa_config`: nova JSON kolona `raspored`; uklonjene kolone `radno_od`, `radno_do`,
+  `broj_slotova`. Migracija postojećoj konfiguraciji upisuje dosadašnje termine na svih 7 dana
+  (rollback vraća radno vreme iz ponedeljka).
+
 ## [1.1.1] — 2026-08-18
 
 ### Izmenjeno

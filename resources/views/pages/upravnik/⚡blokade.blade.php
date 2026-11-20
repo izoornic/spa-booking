@@ -51,7 +51,7 @@ new #[Layout('layouts.app')] #[Title('Blokade termina — upravnik')] class exte
     }
 
     /**
-     * Slot options for the select: 0 = whole day, then each configured slot.
+     * Slot options for the select: 0 = whole day, then each termin of the chosen date.
      *
      * @return array<int, string>
      */
@@ -60,8 +60,8 @@ new #[Layout('layouts.app')] #[Title('Blokade termina — upravnik')] class exte
     {
         $opcije = [0 => __('Ceo dan')];
 
-        if ($this->config !== null) {
-            foreach ($this->config->slots() as $index => $window) {
+        if ($this->config !== null && strtotime($this->datum) !== false) {
+            foreach ($this->config->slotsFor(CarbonImmutable::parse($this->datum)) as $index => $window) {
                 $opcije[$index] = $window['start'].'–'.$window['end'];
             }
         }
@@ -120,13 +120,28 @@ new #[Layout('layouts.app')] #[Title('Blokade termina — upravnik')] class exte
         Flux::toast(variant: 'success', text: __('Blokada je uklonjena.'));
     }
 
-    public function slotLabel(?int $slotIndex): string
+    /**
+     * The selected termin may not exist on a newly chosen date (each weekday has its own schedule).
+     */
+    public function updatedDatum(): void
     {
-        if ($slotIndex === null) {
+        if (! array_key_exists($this->slot, $this->slotOpcije)) {
+            $this->slot = 0;
+        }
+    }
+
+    public function updatedZgradaId(): void
+    {
+        $this->updatedDatum();
+    }
+
+    public function slotLabel(SpaBlokada $blokada): string
+    {
+        if ($blokada->slot_index === null || $this->config === null) {
             return __('Ceo dan');
         }
 
-        return $this->slotOpcije[$slotIndex] ?? (string) $slotIndex;
+        return $this->config->slotOpis($blokada->datum, $blokada->slot_index);
     }
 }; ?>
 
@@ -147,7 +162,7 @@ new #[Layout('layouts.app')] #[Title('Blokade termina — upravnik')] class exte
             @endif
 
             <div class="grid gap-4 md:grid-cols-3">
-                <flux:input type="date" wire:model="datum" :label="__('Datum')" />
+                <flux:input type="date" wire:model.live="datum" :label="__('Datum')" />
 
                 <flux:select wire:model="slot" :label="__('Termin')">
                     @foreach ($this->slotOpcije as $vrednost => $tekst)
@@ -182,7 +197,7 @@ new #[Layout('layouts.app')] #[Title('Blokade termina — upravnik')] class exte
                         <flux:table.cell variant="strong">
                             {{ \Carbon\CarbonImmutable::instance($b->datum)->format('d.m.Y.') }}
                         </flux:table.cell>
-                        <flux:table.cell>{{ $this->slotLabel($b->slot_index) }}</flux:table.cell>
+                        <flux:table.cell>{{ $this->slotLabel($b) }}</flux:table.cell>
                         <flux:table.cell>{{ $b->razlog ?: '—' }}</flux:table.cell>
                         <flux:table.cell>
                             <flux:button size="sm" variant="ghost"
