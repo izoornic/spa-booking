@@ -12,8 +12,7 @@ class TerminOpis
     public static function za(SpaBooking $booking): string
     {
         $config = $booking->zgrada->config;
-        $window = $config->slotWindow($booking->slot_index);
 
-        return $booking->datum->format('d.m.Y.').' '.$window['start'].'–'.$window['end'];
+        return $booking->datum->format('d.m.Y.').' '.$config->slotOpis($booking->datum, $booking->slot_index);
     }
 }

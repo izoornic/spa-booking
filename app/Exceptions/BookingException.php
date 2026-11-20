@@ -85,4 +85,16 @@ class BookingException extends RuntimeException
     {
         return new self('Rezervacija sa ovim kodom nije pronađena.');
     }
+
+    /**
+     * @param  list<string>  $termini  labels of upcoming termini the new schedule would drop
+     */
+    public static function rasporedKonflikt(array $termini): self
+    {
+        return new self(
+            'Raspored nije sačuvan — ovi termini imaju aktivne rezervacije ili blokade, a u novom rasporedu ne postoje: '
+            .implode('; ', $termini)
+            .'. Otkažite te rezervacije i uklonite blokade (ili blokirajte ceo dan), pa sačuvajte ponovo.'
+        );
+    }
 }

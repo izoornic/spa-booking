@@ -102,8 +102,7 @@ new #[Layout('layouts.owner')] #[Title('Spa rezervacije')] class extends Compone
             $dayKey = $d->format('Y-m-d');
             $slotovi = [];
 
-            for ($s = 1; $s <= $config->broj_slotova; $s++) {
-                $window = $config->slotWindow($s);
+            foreach ($config->slotsFor($d) as $s => $window) {
                 $start = $config->slotStartAt($d, $s);
                 $inSlot = $bookings->get($dayKey.'#'.$s, collect());
                 $zauzeto = (int) $inSlot->sum('broj_osoba');
@@ -285,7 +284,7 @@ new #[Layout('layouts.owner')] #[Title('Spa rezervacije')] class extends Compone
 
                     <flux:text class="font-medium">
                         {{ $rez->slot_index }}. {{ __('termin') }}
-                        {{ $config->slotWindow($rez->slot_index)['start'] }}–{{ $config->slotWindow($rez->slot_index)['end'] }}
+                        {{ $config->slotOpis($rez->datum, $rez->slot_index) }}
                     </flux:text>
                 </div>
                 <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
@@ -344,7 +343,7 @@ new #[Layout('layouts.owner')] #[Title('Spa rezervacije')] class extends Compone
                 <flux:heading size="lg" class="flex"><x-heroicon-o-calendar class="h-5 w-5 mr-2 mt-1" />{{ $this->formatDatum($dan['datum']) }}</flux:heading>
 
                 <div class="flex flex-col gap-2">
-                    @foreach ($dan['slotovi'] as $slot)
+                    @forelse ($dan['slotovi'] as $slot)
                         <div class="border border-zinc-200 px-3 py-2 dark:border-zinc-700 rounded-lg">
                             <div class="flex items-center justify-between gap-2">
                                 <div class="flex flex-col">
@@ -376,7 +375,9 @@ new #[Layout('layouts.owner')] #[Title('Spa rezervacije')] class extends Compone
                                 :uslovne="$slot['uslovne']"
                                 :kapacitet="$slot['kapacitet']" />
                         </div>
-                    @endforeach
+                    @empty
+                        <flux:text class="text-sm text-zinc-500">{{ __('Zatvoreno — nema termina.') }}</flux:text>
+                    @endforelse
                 </div>
             </flux:card>
         @endforeach
@@ -392,7 +393,7 @@ new #[Layout('layouts.owner')] #[Title('Spa rezervacije')] class extends Compone
             {{-- Termin je već izabran iz kalendara — ovde se ne menja. --}}
             <flux:text class="text-sm text-zinc-500">
                 {{ $this->formatDatum(\Carbon\CarbonImmutable::parse($reserveDatum)) }}<br />
-                {{ $reserveSlot }}. termin  - {{ $config->slotWindow($reserveSlot)['start'] }}–{{ $config->slotWindow($reserveSlot)['end'] }}
+                {{ $reserveSlot }}. termin  - {{ $config->slotOpis(\Carbon\CarbonImmutable::parse($reserveDatum), $reserveSlot) }}
             </flux:text>
 
             {{-- Broj osoba: mreža dugmića sa User ikonom, ponaša se kao rating. --}}
@@ -462,12 +463,21 @@ new #[Layout('layouts.owner')] #[Title('Spa rezervacije')] class extends Compone
                         <flux:text class="font-medium text-zinc-900 dark:text-white">{{ __('Termini') }}</flux:text>
                         <p>
                             {{ __('Spa možete rezervisati') }} {{ $config->horizont_dana }} {{ __('dana unapred.') }}
-                            {{ __('Svaki dan ima') }} {{ $config->broj_slotova }} {{ __('termina po 3 sata:') }}
-                            @for ($s = 1; $s <= $config->broj_slotova; $s++)
-                                <strong>{{ $config->slotWindow($s)['start'] }}–{{ $config->slotWindow($s)['end'] }}</strong>@if ($s < $config->broj_slotova), @endif
-                            @endfor.
                             {{ __('Rezervisati se može najkasnije') }} {{ $config->min_sati_pre }} {{ __('sata pre početka termina.') }}
+                            {{ __('Raspored termina:') }}
                         </p>
+                        <ul class="mt-1 flex flex-col gap-0.5">
+                            @foreach ($config->rasporedPoGrupama() as $grupa)
+                                <li wire:key="raspored-{{ $loop->index }}">
+                                    {{ $grupa['dani'] }}:
+                                    @if ($grupa['termini'] === [])
+                                        <strong>{{ __('zatvoreno') }}</strong>
+                                    @else
+                                        <strong>{{ implode(', ', $grupa['termini']) }}</strong>
+                                    @endif
+                                </li>
+                            @endforeach
+                        </ul>
                     </div>
                 </div>
 

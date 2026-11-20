@@ -46,7 +46,7 @@ class DisplaceMoveTest extends TestCase
 
     public function test_displaced_booking_is_cancelled_when_no_free_slot(): void
     {
-        $this->bootScenario(['broj_slotova' => 1, 'horizont_dana' => 1, 'kapacitet' => 5]);
+        $this->bootScenario(['raspored' => array_fill_keys(range(1, 7), [['start' => '12:00', 'end' => '21:00']]), 'horizont_dana' => 1, 'kapacitet' => 5]);
 
         $today = CarbonImmutable::now()->startOfDay();
         $tomorrow = $this->tomorrow();

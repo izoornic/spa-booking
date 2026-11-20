@@ -54,8 +54,7 @@ new #[Layout('layouts.staff')] #[Title('Domar — pregled')] class extends Compo
                 $dayKey = $dan->format('Y-m-d');
                 $slotovi = [];
 
-                for ($s = 1; $s <= $config->broj_slotova; $s++) {
-                    $window = $config->slotWindow($s);
+                foreach ($config->slotsFor($dan) as $s => $window) {
                     $inSlot = $bookings->get($dayKey.'#'.$s, collect())
                         ->sortByDesc(fn (SpaBooking $b): bool => $b->je_trajna)
                         ->values();
@@ -161,7 +160,7 @@ new #[Layout('layouts.staff')] #[Title('Domar — pregled')] class extends Compo
                 <flux:card class="flex flex-col gap-3">
                     <flux:heading size="sm">{{ $this->formatDatum($dan['datum']) }}</flux:heading>
 
-                    @foreach ($dan['slotovi'] as $slot)
+                    @forelse ($dan['slotovi'] as $slot)
                         <div class="flex flex-col gap-2 rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
                             <div class="flex items-center justify-between">
                                 <flux:text class="font-medium">{{ $slot['index'] }}. {{ __('termin') }} {{ $slot['label'] }}</flux:text>
@@ -199,7 +198,9 @@ new #[Layout('layouts.staff')] #[Title('Domar — pregled')] class extends Compo
                                 <flux:text class="text-sm text-zinc-400">{{ __('Nema rezervacija.') }}</flux:text>
                             @endforelse
                         </div>
-                    @endforeach
+                    @empty
+                        <flux:text class="text-sm text-zinc-500">{{ __('Zatvoreno — nema termina.') }}</flux:text>
+                    @endforelse
                 </flux:card>
             @endforeach
         </div>

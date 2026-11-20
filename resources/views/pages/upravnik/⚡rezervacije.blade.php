@@ -78,8 +78,7 @@ new #[Layout('layouts.app')] #[Title('Rezervacije — upravnik')] class extends 
                 $dayKey = $d->format('Y-m-d');
                 $slotovi = [];
 
-                for ($s = 1; $s <= $config->broj_slotova; $s++) {
-                    $window = $config->slotWindow($s);
+                foreach ($config->slotsFor($d) as $s => $window) {
                     $inSlot = $bookings->get($dayKey.'#'.$s, collect())
                         ->sortByDesc(fn (SpaBooking $b): bool => $b->je_trajna)
                         ->values();
@@ -141,9 +140,7 @@ new #[Layout('layouts.app')] #[Title('Rezervacije — upravnik')] class extends 
             return CarbonImmutable::instance($booking->datum)->format('d.m.Y.');
         }
 
-        $window = $config->slotWindow($booking->slot_index);
-
-        return CarbonImmutable::instance($booking->datum)->format('d.m.Y.').' '.$window['start'].'–'.$window['end'];
+        return CarbonImmutable::instance($booking->datum)->format('d.m.Y.').' '.$config->slotOpis($booking->datum, $booking->slot_index);
     }
 
     public function stanjeBoja(BookingState $stanje): string
@@ -200,7 +197,7 @@ new #[Layout('layouts.app')] #[Title('Rezervacije — upravnik')] class extends 
                                 {{ $this->formatDatum($dan['datum']) }}
                             </flux:heading>
 
-                            @foreach ($dan['slotovi'] as $slot)
+                            @forelse ($dan['slotovi'] as $slot)
                                 <div @class([
                                     'rounded-lg border border-zinc-200 bg-white px-3 py-2 dark:border-zinc-700 dark:bg-white/5',
                                     'opacity-60' => $slot['blokirano'],
@@ -234,7 +231,9 @@ new #[Layout('layouts.app')] #[Title('Rezervacije — upravnik')] class extends 
                                         </div>
                                     @endif
                                 </div>
-                            @endforeach
+                            @empty
+                                <flux:text class="text-sm text-zinc-500">{{ __('Zatvoreno — nema termina.') }}</flux:text>
+                            @endforelse
                         </flux:card>
                     @endforeach
                 </div>

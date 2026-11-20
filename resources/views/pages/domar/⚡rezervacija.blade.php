@@ -93,10 +93,9 @@ new #[Layout('layouts.staff')] #[Title('Domar — rezervacija')] class extends C
             return '';
         }
 
-        $window = $this->config->slotWindow($this->booking->slot_index);
         $datum = CarbonImmutable::instance($this->booking->datum);
 
-        return $datum->format('d.m.Y').' · '.$window['start'].'–'.$window['end'];
+        return $datum->format('d.m.Y').' · '.$this->config->slotOpis($datum, $this->booking->slot_index);
     }
 
     public function stanjeBadge(): string

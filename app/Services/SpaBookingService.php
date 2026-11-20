@@ -155,6 +155,10 @@ class SpaBookingService
         $datum = CarbonImmutable::instance($datum)->startOfDay();
 
         return DB::transaction(function () use ($zgrada, $datum, $slotIndex, $razlog, $autor) {
+            if ($slotIndex !== null && ! $zgrada->config?->hasSlot($datum, $slotIndex)) {
+                throw BookingException::nepostojeciSlot();
+            }
+
             if ($this->isBlocked($zgrada->id, $datum, $slotIndex)) {
                 throw BookingException::vecBlokiran();
             }
@@ -191,6 +195,74 @@ class SpaBookingService
             }
 
             return $blokada;
+        });
+    }
+
+    /**
+     * Replace a building's weekly schedule. Existing reservations and blockades keep their
+     * termin: when the same start–end still exists on that day in the new schedule, their
+     * slot_index is remapped to its new position. If an upcoming active reservation or an
+     * upcoming blockade would lose its termin, nothing is saved.
+     *
+     * @param  array<int, list<array{start: string, end: string}>>  $raspored  keyed by ISO weekday
+     *
+     * @throws BookingException when upcoming reservations/blockades would be orphaned
+     */
+    public function promeniRaspored(SpaConfig $config, array $raspored): void
+    {
+        $novi = new SpaConfig(['raspored' => $raspored]);
+
+        $promenjeniDani = array_values(array_filter(
+            array_keys(SpaConfig::DANI),
+            fn (int $dan): bool => $config->slotsForWeekday($dan) !== $novi->slotsForWeekday($dan),
+        ));
+
+        DB::transaction(function () use ($config, $novi, $raspored, $promenjeniDani) {
+            $now = CarbonImmutable::now();
+            $konflikti = [];
+            $premapiranja = [];
+
+            if ($promenjeniDani !== []) {
+                $zapisi = SpaBooking::where('zgrada_id', $config->zgrada_id)->lockForUpdate()->get()
+                    ->concat(SpaBlokada::where('zgrada_id', $config->zgrada_id)->whereNotNull('slot_index')->get());
+
+                foreach ($zapisi as $zapis) {
+                    $datum = CarbonImmutable::instance($zapis->datum);
+                    $slotIndex = (int) $zapis->slot_index;
+
+                    if (! in_array($datum->dayOfWeekIso, $promenjeniDani, true) || ! $config->hasSlot($datum, $slotIndex)) {
+                        continue;
+                    }
+
+                    $noviIndex = array_search($config->slotWindow($datum, $slotIndex), $novi->slotsFor($datum), true);
+
+                    if ($noviIndex === false) {
+                        $bitan = $zapis instanceof SpaBlokada || in_array($zapis->stanje, BookingState::active(), true);
+
+                        if ($bitan && $config->slotEndAt($datum, $slotIndex)->gt($now)) {
+                            $konflikti[$datum->format('Y-m-d').'#'.$slotIndex] = $datum->format('d.m.').' '.$config->slotOpis($datum, $slotIndex);
+                        }
+
+                        continue;
+                    }
+
+                    if ($noviIndex !== $slotIndex) {
+                        $premapiranja[] = [$zapis, $noviIndex];
+                    }
+                }
+            }
+
+            if ($konflikti !== []) {
+                ksort($konflikti);
+
+                throw BookingException::rasporedKonflikt(array_values($konflikti));
+            }
+
+            foreach ($premapiranja as [$zapis, $noviIndex]) {
+                $zapis->update(['slot_index' => $noviIndex]);
+            }
+
+            $config->update(['raspored' => $raspored]);
         });
     }
 
@@ -363,7 +435,7 @@ class SpaBookingService
         $earliest = $now->addHours($config->min_sati_pre);
 
         for ($d = $today; $d->lte($horizonEnd); $d = $d->addDay()) {
-            for ($s = 1; $s <= $config->broj_slotova; $s++) {
+            foreach (array_keys($config->slotsFor($d)) as $s) {
                 if ($d->isSameDay($izbegniDatum) && $s === $izbegniSlot) {
                     continue;
                 }
@@ -405,7 +477,7 @@ class SpaBookingService
             throw BookingException::konfiguracijaNeaktivna();
         }
 
-        if ($slotIndex < 1 || $slotIndex > $config->broj_slotova) {
+        if (! $config->hasSlot($datum, $slotIndex)) {
             throw BookingException::nepostojeciSlot();
         }
 

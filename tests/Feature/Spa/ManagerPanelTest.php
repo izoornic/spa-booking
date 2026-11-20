@@ -55,7 +55,7 @@ class ManagerPanelTest extends TestCase
 
         // The horizon covers today + horizont_dana days, each with every slot.
         $this->assertCount($this->config->horizont_dana + 1, $kalendar[0]['dani']);
-        $this->assertCount($this->config->broj_slotova, $kalendar[0]['dani'][0]['slotovi']);
+        $this->assertCount(count($this->config->slotsFor($kalendar[0]['dani'][0]['datum'])), $kalendar[0]['dani'][0]['slotovi']);
 
         // Tomorrow's second slot carries the 3 booked persons; a first reservation is "trajna".
         $slot = $kalendar[0]['dani'][1]['slotovi'][1];
@@ -259,9 +259,9 @@ class ManagerPanelTest extends TestCase
 
         Livewire::actingAs($this->manager())
             ->test('pages::upravnik.konfiguracija')
-            ->set('radno_od', '18:00')
-            ->set('radno_do', '15:00')
+            ->set('raspored.1.0.start', '18:00')
+            ->set('raspored.1.0.end', '15:00')
             ->call('sacuvaj')
-            ->assertHasErrors('radno_do');
+            ->assertHasErrors('raspored.1.0.end');
     }
 }
